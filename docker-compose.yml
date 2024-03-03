@@ -1,0 +1,30 @@
+version: '2'
+services:
+  rabbitmq:
+    image: rabbitmq:3
+    container_name: rabbitmq
+    ports:
+        - 5672:5672
+        - 15672:15672
+    restart: always
+    network_mode: host
+  employee:
+    image: local/employee:latest
+    container_name: employee
+    hostname: employee
+    environment:
+    - RABBIT_URL=amqp://guest:guest@127.0.0.1:5672
+    restart: always
+    depends_on:
+      - rabbitmq
+    network_mode: host
+  generator:
+    image: local/generator:latest
+    container_name: generator
+    hostname: generator
+    environment:
+    - RABBIT_URL=amqp://guest:guest@127.0.0.1:5672
+    restart: always
+    depends_on:
+      - rabbitmq
+    network_mode: host
