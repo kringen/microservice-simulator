@@ -1,15 +1,12 @@
 package main
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"log/slog"
 	"os"
-	"time"
 
 	rmq "github.com/kringen/message-center/rabbitmq"
-	amqp "github.com/rabbitmq/amqp091-go"
 
 	//amqp "github.com/rabbitmq/amqp091-go"
 	_ "github.com/lib/pq" // PostgreSQL driver
@@ -17,49 +14,13 @@ import (
 
 var logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
-func createQueue(mc *rmq.MessageCenter, name string, durable bool, deleteUnused bool,
-	exclusive bool, noWait bool, arguments map[string]interface{}) error {
-
-	err := mc.CreateQueue(name, durable, deleteUnused, exclusive, noWait, arguments)
-	if err != nil {
-		return err
-	}
-	return nil
-}
-
 func (e Employee) Create() {
 
 }
 
-func publishMessage(messageCenter *rmq.MessageCenter, q string, message []byte) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	err := messageCenter.Channel.PublishWithContext(ctx,
-		"",    // exchange
-		q,     // routing key
-		false, // mandatory
-		false, // immediate
-		amqp.Publishing{
-			ContentType: "application/json",
-			Body:        message,
-		})
-	if err != nil {
-		logger.Error(err.Error())
-	}
-	logger.Info(fmt.Sprintf(" [x] Sent %s\n", message))
-}
-
 func EmployeeReadListen(goChanEmployee chan string, messageCenter *rmq.MessageCenter, queue string) {
 	// Listen for messages
-	messages, err := messageCenter.Channel.Consume(
-		queue, // queue name
-		"",    // consumer
-		true,  // auto-ack
-		false, // exclusive
-		false, // no local
-		false, // no wait
-		nil,   // arguments
-	)
+	messages, err := messageCenter.ConsumeMessage(queue, "", true, false, false, false, nil)
 	if err != nil {
 		logger.Error(err.Error())
 	}
@@ -90,7 +51,7 @@ func EmployeeReadListen(goChanEmployee chan string, messageCenter *rmq.MessageCe
 		if err != nil {
 			logger.Error(err.Error())
 		}
-		publishMessage(messageCenter, replyQueue, b)
+		messageCenter.PublishMessage(replyQueue, b, "", false, false, "text/plain")
 		//logger.Info(fmt.Sprintf("Mode: %s\n", config.Mode))
 		//logger.Info(fmt.Sprintf("Objective: %s\n", config.Objective))
 	}
@@ -98,15 +59,7 @@ func EmployeeReadListen(goChanEmployee chan string, messageCenter *rmq.MessageCe
 
 func EmployeeCreateListen(goChanEmployee chan string, messageCenter *rmq.MessageCenter, queue string) {
 	// Listen for messages
-	messages, err := messageCenter.Channel.Consume(
-		queue, // queue name
-		"",    // consumer
-		true,  // auto-ack
-		false, // exclusive
-		false, // no local
-		false, // no wait
-		nil,   // arguments
-	)
+	messages, err := messageCenter.ConsumeMessage(queue, "", true, false, false, false, nil)
 	if err != nil {
 		logger.Error(err.Error())
 	}
@@ -145,7 +98,7 @@ func main() {
 	defer messageCenter.Channel.Close()
 
 	logger.Info("Creating queue for employee_create...")
-	err = createQueue(&messageCenter, "employee_create", false, false, false, false, nil)
+	err = messageCenter.CreateQueue("employee_create", false, false, false, false, nil)
 	if err != nil {
 		panic(err)
 	}
