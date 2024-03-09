@@ -5,8 +5,8 @@ github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
-github.com/kringen/message-center v0.0.4 h1:siMinqQPBkEZInVxSSHkKSFHpFuNC21aXQC0WSvpBX8=
-github.com/kringen/message-center v0.0.4/go.mod h1:Ztjdp7KQe5U0vyK1U6Ioe5rOjPA8cczCm6Cskf7Og50=
+github.com/kringen/message-center v0.0.6 h1:0FwuwL1m8grfXbXmftsdgOiMilW3KXTzHT5KMKKxidc=
+github.com/kringen/message-center v0.0.6/go.mod h1:Ztjdp7KQe5U0vyK1U6Ioe5rOjPA8cczCm6Cskf7Og50=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/rabbitmq/amqp091-go v1.9.0 h1:qrQtyzB4H8BQgEuJwhmVQqVHB9O4+MNDJCCAcpc3Aoo=
 github.com/rabbitmq/amqp091-go v1.9.0/go.mod h1:+jPrT9iY2eLjRaMSRHUhc3z14E/l85kv/f+6luSD3pc=
