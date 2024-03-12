@@ -8,15 +8,32 @@ services:
         - 15672:15672
     restart: always
     network_mode: host
+  postgres:
+    image: postgres:9.6
+    container_name: postgres
+    ports:
+        - 5432:5432
+    environment:
+    - POSTGRES_USER=myuser
+    - POSTGRES_PASSWORD=mypassword
+    - POSTGRES_DB=mydb
+    restart: always
+    network_mode: host
   employee:
     image: local/employee:latest
     container_name: employee
     hostname: employee
     environment:
     - RABBIT_URL=amqp://guest:guest@127.0.0.1:5672
+    - DB_SERVER=postgres
+    - DB_USER=myuser
+    - DB_PASSWORD=mypassword
+    - DB_SSLMODE=disable
+    - DB_DATABASE=mydb
     restart: always
     depends_on:
       - rabbitmq
+      - postgres
     network_mode: host
   generator:
     image: local/generator:latest
@@ -24,7 +41,9 @@ services:
     hostname: generator
     environment:
     - RABBIT_URL=amqp://guest:guest@127.0.0.1:5672
-    restart: always
+    restart: no
     depends_on:
       - rabbitmq
+      - postgres
+      - employee
     network_mode: host

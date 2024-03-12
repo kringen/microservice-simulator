@@ -6,7 +6,6 @@ import (
 
 // https://github.com/harryho/db-samples/blob/master/pgsql/northwind.sql
 type Employee struct {
-	CorrelationId   string         `json:"correlation_id"`
 	EmpId           int            `json:"empid"`
 	LastName        string         `json:"last_name"`
 	FirstName       string         `json:"first_name"`

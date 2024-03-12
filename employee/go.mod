@@ -5,7 +5,7 @@ go 1.21.3
 toolchain go1.22.0
 
 require (
-	github.com/kringen/message-center v0.0.4
+	github.com/kringen/message-center v0.0.12
 	github.com/lib/pq v1.10.9
 )
 

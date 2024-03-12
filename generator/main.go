@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"os"
 
@@ -13,7 +14,8 @@ import (
 var logger = slog.New(slog.NewJSONHandler(os.Stdout, nil))
 
 func main() {
-
+	lvl := new(slog.LevelVar)
+	lvl.Set(slog.LevelInfo)
 	messageCenter := rmq.MessageCenter{}
 
 	employeeSaga := rmq.Saga{
@@ -27,36 +29,39 @@ func main() {
 	// Establish messaging connection
 
 	messageCenter.ServerUrl = os.Getenv("RABBIT_URL")
-	err := messageCenter.Connect("employee", 5, 5)
+	err := messageCenter.Connect("employee", 5, 10)
 	if err != nil {
-		panic(err)
+		logger.Error(err.Error())
 	}
 	defer messageCenter.Connection.Close()
 	defer messageCenter.Channel.Close()
 
 	stepOne := rmq.SagaStep{
-		StepName:        "Publish Create Employee",
+		StepName:        "Create Employee",
 		StepDescription: "Send create request to Employee service",
 		QueueName:       "employee_create",
 		ActionType:      "publish_and_confirm",
 		ReplyQueueName:  uuid.New().String(),
 	}
-	logger.Info("Creating Saga step one")
-	employeeSaga.SagaSteps = append(employeeSaga.SagaSteps, stepOne)
 
 	/////////////////////////
 	// TEST
 	// Create a test create message
 	employee := Employee{
-		CorrelationId: employeeSaga.CorrelationId,
-		FirstName:     "Jason",
-		LastName:      "Bourne",
+		FirstName: "Jason",
+		LastName:  "Bourne",
 	}
 
 	// Serialize to json
 	b, _ := json.Marshal(employee)
 	stepOne.DataObject = b
+	employeeSaga.SagaSteps = append(employeeSaga.SagaSteps, stepOne)
 	logger.Info("Starting Saga")
 	employeeSaga.StartSaga(&messageCenter)
-
+	logger.Info(fmt.Sprintf("Saga completed: %s", employeeSaga.CorrelationId))
+	for _, step := range employeeSaga.SagaSteps {
+		for _, stepResult := range step.Results {
+			logger.Info(fmt.Sprintf("Step: %v", stepResult))
+		}
+	}
 }
