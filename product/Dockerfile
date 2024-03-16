@@ -11,7 +11,7 @@ RUN go mod download
 # https://docs.docker.com/engine/reference/builder/#copy
 COPY *.go ./
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /generator
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o /product
 
 # Run the tests in the container
 FROM build-stage AS run-test-stage
@@ -22,8 +22,7 @@ RUN go test -v ./...
 FROM registry.access.redhat.com/ubi9/ubi-minimal
 WORKDIR /
 
-COPY --from=build-stage /generator /generator
-COPY data/ /data/
+COPY --from=build-stage /product /product
 
 # Optional:
 # To bind to a TCP port, runtime parameters must be supplied to the docker command.
@@ -34,4 +33,4 @@ COPY data/ /data/
 
 USER 1001
 
-ENTRYPOINT ["/generator"]
+ENTRYPOINT ["/product"]
