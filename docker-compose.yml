@@ -18,7 +18,7 @@ services:
     environment:
     - POSTGRES_USER=myuser
     - POSTGRES_PASSWORD=mypassword
-    - POSTGRES_MULTIPLE_DATABASES=employee,product
+    - POSTGRES_MULTIPLE_DATABASES=employee,product,customer
     restart: always
     network_mode: host
   employee:
@@ -32,6 +32,38 @@ services:
     - DB_PASSWORD=mypassword
     - DB_SSLMODE=disable
     - DB_DATABASE=employee
+    restart: always
+    depends_on:
+      - rabbitmq
+      - postgres
+    network_mode: host
+  product:
+    image: local/product:latest
+    container_name: product
+    hostname: product
+    environment:
+    - RABBIT_URL=amqp://guest:guest@127.0.0.1:5672
+    - DB_SERVER=postgres
+    - DB_USER=myuser
+    - DB_PASSWORD=mypassword
+    - DB_SSLMODE=disable
+    - DB_DATABASE=product
+    restart: always
+    depends_on:
+      - rabbitmq
+      - postgres
+    network_mode: host
+  customer:
+    image: local/customer:latest
+    container_name: customer
+    hostname: customer
+    environment:
+    - RABBIT_URL=amqp://guest:guest@127.0.0.1:5672
+    - DB_SERVER=postgres
+    - DB_USER=myuser
+    - DB_PASSWORD=mypassword
+    - DB_SSLMODE=disable
+    - DB_DATABASE=customer
     restart: always
     depends_on:
       - rabbitmq

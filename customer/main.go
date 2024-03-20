@@ -23,17 +23,17 @@ var password = os.Getenv("DB_PASSWORD") // mypassword
 var sslmode = os.Getenv("DB_SSLMODE")   // disable
 var database = os.Getenv("DB_DATABASE") // mydb
 
-func (e Product) Create() {
+func (e Customer) Create() {
 
 }
 
-func setupProductTable(db *sql.DB) {
+func setupCustomerTable(db *sql.DB) {
 	// Create table
 	createStatement := `
-	CREATE TABLE IF NOT EXISTS product 
+	CREATE TABLE IF NOT EXISTS customer 
 	( 
-		productid      		 SERIAL  PRIMARY KEY NOT NULL, 
-		productname        	 VARCHAR (125) NOT NULL, 
+		customerid      		 SERIAL  PRIMARY KEY NOT NULL, 
+		customername        	 VARCHAR (125) NOT NULL, 
 		supplierid       	 INT NULL, 
 		categoryid       	 INT NULL, 
 		quantityperunit 	 INT NULL, 
@@ -49,7 +49,7 @@ func setupProductTable(db *sql.DB) {
 	}
 }
 
-func ProductCreateListen(goChanProduct chan string, messageCenter *rmq.MessageCenter, queue string) {
+func CustomerCreateListen(goChanCustomer chan string, messageCenter *rmq.MessageCenter, queue string) {
 	// Listen for messages
 	messages, err := messageCenter.ConsumeMessage(queue, "", true, false, false, false, nil)
 	if err != nil {
@@ -61,8 +61,8 @@ func ProductCreateListen(goChanProduct chan string, messageCenter *rmq.MessageCe
 	for message := range messages {
 		// Continue to receive messages
 		logger.Info(fmt.Sprintf(" > Received message on %s: %s", queue, message.Body))
-		var product Product
-		err := json.Unmarshal(message.Body, &product)
+		var customer Customer
+		err := json.Unmarshal(message.Body, &customer)
 		if err != nil {
 			logger.Error(err.Error())
 		}
@@ -75,21 +75,21 @@ func ProductCreateListen(goChanProduct chan string, messageCenter *rmq.MessageCe
 		defer db.Close()
 
 		logger.Info("Connected to database")
-		setupProductTable(db)
+		setupCustomerTable(db)
 
 		logger.Info("Table setup")
-		_, err = db.Exec("INSERT INTO product (productname) VALUES ($1)", product.ProductName)
+		_, err = db.Exec("INSERT INTO customer (customername) VALUES ($1)", customer.CompanyName)
 		if err != nil {
 			logger.Error(err.Error())
 		}
 		db.Close()
 		//
-		// Return productId
-		returnProduct := Product{
-			ProductId:   100,
-			ProductName: "Product X",
+		// Return customerId
+		returnCustomer := Customer{
+			CompanyName: "Test Company",
+			CustId:      100,
 		}
-		b, err := json.Marshal(returnProduct)
+		b, err := json.Marshal(returnCustomer)
 		if err != nil {
 			logger.Error(err.Error())
 		}
@@ -115,7 +115,7 @@ func main() {
 	messageCenter := rmq.MessageCenter{}
 	// Define RabbitMQ server URL.
 	messageCenter.ServerUrl = os.Getenv("RABBIT_URL")
-	channel := "product"
+	channel := "customer"
 	err := messageCenter.Connect(channel, 5, 10)
 	if err != nil {
 		logger.Error(err.Error())
@@ -123,18 +123,18 @@ func main() {
 	defer messageCenter.Connection.Close()
 	defer messageCenter.Channel.Close()
 
-	err = messageCenter.CreateQueue("product_create", false, false, false, false, nil)
+	err = messageCenter.CreateQueue("customer_create", false, false, false, false, nil)
 	if err != nil {
 		logger.Error(err.Error())
 	}
 	// Startup service channels
-	goChanProductCreate := make(chan string)
-	go ProductCreateListen(goChanProductCreate, &messageCenter, "product_create")
-	<-goChanProductCreate
+	goChanCustomerCreate := make(chan string)
+	go CustomerCreateListen(goChanCustomerCreate, &messageCenter, "customer_create")
+	<-goChanCustomerCreate
 	/*
-	   goChanProductRead := make(chan string)
-	   go ProductReadListen(goChanProductRead, &messageCenter, "product_read")
-	   <-goChanProductRead
+	   goChanCustomerRead := make(chan string)
+	   go CustomerReadListen(goChanCustomerRead, &messageCenter, "customer_read")
+	   <-goChanCustomerRead
 	*/
 	go forever()
 	quitChannel := make(chan os.Signal, 1)
